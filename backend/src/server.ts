@@ -5,13 +5,16 @@ import { createAuthRouter } from './authRouter.js'
 import { startDiscordBot } from './bot.js'
 import { loadConfig } from './config.js'
 import { createJsonProfileDatabase } from './jsonProfileDatabase.js'
+import { createPostgresProfileDatabase } from './postgresProfileDatabase.js'
 import { createProfileRouter } from './profileRouter.js'
 import { createSessionStore } from './sessionStore.js'
 
 const config = loadConfig()
 const sessions = createSessionStore(config.sessionTtlMs)
-const profileDb = createJsonProfileDatabase(config.profileDbPath)
 const bot = startDiscordBot(config.discordBotToken)
+const profileDb = config.databaseUrl
+  ? await createPostgresProfileDatabase(config.databaseUrl)
+  : createJsonProfileDatabase(config.profileDbPath)
 
 const app = express()
 
@@ -43,5 +46,9 @@ app.use('/profile', createProfileRouter(sessions, profileDb))
 
 app.listen(config.port, () => {
   console.log(`Westside backend listening on http://localhost:${config.port}`)
-  console.log(`Profiles database: ${config.profileDbPath}`)
+  if (config.databaseUrl) {
+    console.log('Profiles database: PostgreSQL (DATABASE_URL)')
+  } else {
+    console.log(`Profiles database: JSON (${config.profileDbPath})`)
+  }
 })

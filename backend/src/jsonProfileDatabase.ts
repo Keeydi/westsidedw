@@ -1,54 +1,12 @@
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import type { SessionUser } from './sessionStore.js'
-
-/** Social links as stored in profiles.json (`socials`) */
-export type ProfileSocialsJson = {
-  discord?: string
-  github?: string
-  twitch?: string
-  tiktok?: string
-  kick?: string
-  youtube?: string
-}
-
-/**
- * One profile row in `data/profiles.json` (JSON array).
- * Discord identity + editable fields.
- */
-export type ProfileRecordJson = {
-  id: string
-  username: string
-  displayName: string
-  avatar: string | null
-  /** Only approved group members are visible on public members pages. */
-  isGroupMember?: boolean
-  bio?: string
-  role?: string
-  socials?: ProfileSocialsJson
-  backgroundUrl?: string
-  musicUrl?: string
-}
-
-/** Shape returned to the frontend (`socialLinks` matches existing API). */
-export type ApiUserProfile = {
-  bio?: string
-  role?: string
-  backgroundUrl?: string
-  musicUrl?: string
-  socialLinks?: ProfileSocialsJson
-}
-
-export type ProfileDatabase = {
-  syncFromSession(user: SessionUser): void
-  getByUsername(username: string): ProfileRecordJson | undefined
-  isPublicMember(username: string): boolean
-  isGroupMemberById(userId: string): boolean
-  setGroupMemberById(userId: string, isGroupMember: boolean): void
-  listPublicMembers(): Array<{ user: ProfileRecordJson; profile: ApiUserProfile }>
-  getApiProfile(userId: string): ApiUserProfile
-  upsertApiProfile(userId: string, patch: ApiUserProfile): ApiUserProfile
-}
+import type {
+  ApiUserProfile,
+  ProfileDatabase,
+  ProfileRecordJson,
+  ProfileSocialsJson,
+} from './profileDatabase.js'
 
 function normalizeOptional(value: string | undefined): string | undefined {
   if (value === undefined || value === null) return undefined
@@ -165,7 +123,7 @@ export function createJsonProfileDatabase(filePath: string): ProfileDatabase {
 
   load()
 
-  const syncFromSession = (user: SessionUser) => {
+  const syncFromSession = async (user: SessionUser) => {
     const existing = byId.get(user.id)
     const avatar = user.avatarUrl
     if (existing) {
@@ -193,20 +151,20 @@ export function createJsonProfileDatabase(filePath: string): ProfileDatabase {
     save()
   }
 
-  const getByUsername = (username: string) => {
+  const getByUsername = async (username: string) => {
     return byUsernameLower.get(username.toLowerCase())
   }
 
-  const isPublicMember = (username: string) => {
+  const isPublicMember = async (username: string) => {
     const row = byUsernameLower.get(username.toLowerCase())
     return Boolean(row?.isGroupMember)
   }
 
-  const isGroupMemberById = (userId: string) => {
+  const isGroupMemberById = async (userId: string) => {
     return Boolean(byId.get(userId)?.isGroupMember)
   }
 
-  const setGroupMemberById = (userId: string, isGroupMember: boolean) => {
+  const setGroupMemberById = async (userId: string, isGroupMember: boolean) => {
     const row = byId.get(userId)
     if (!row) return
     if (isGroupMember) row.isGroupMember = true
@@ -215,7 +173,7 @@ export function createJsonProfileDatabase(filePath: string): ProfileDatabase {
     save()
   }
 
-  const listPublicMembers = () => {
+  const listPublicMembers = async () => {
     return records
       .filter((r) => r.isGroupMember)
       .map((r) => ({
@@ -224,13 +182,13 @@ export function createJsonProfileDatabase(filePath: string): ProfileDatabase {
       }))
   }
 
-  const getApiProfile = (userId: string) => {
+  const getApiProfile = async (userId: string) => {
     const r = byId.get(userId)
     if (!r) return {}
     return recordToApi(r)
   }
 
-  const upsertApiProfile = (userId: string, patch: ApiUserProfile) => {
+  const upsertApiProfile = async (userId: string, patch: ApiUserProfile) => {
     const r = byId.get(userId)
     if (!r) {
       throw new Error(`Profile row missing for user ${userId}; sync session first.`)

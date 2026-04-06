@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto'
 import { Router } from 'express'
 import type { AppConfig } from './config.js'
 import type { SessionStore, SessionUser } from './sessionStore.js'
-import type { ProfileDatabase } from './jsonProfileDatabase.js'
+import type { ProfileDatabase } from './profileDatabase.js'
 import type { BotHandle } from './bot.js'
 
 const SESSION_COOKIE = 'westside_sid'
@@ -126,9 +126,9 @@ export function createAuthRouter(
 
     const userJson = (await userResponse.json()) as DiscordUserResponse
     const sessionUser = buildSessionUser(userJson)
-    profileDb.syncFromSession(sessionUser)
+    await profileDb.syncFromSession(sessionUser)
 
-    const alreadyApproved = profileDb.isGroupMemberById(sessionUser.id)
+    const alreadyApproved = await profileDb.isGroupMemberById(sessionUser.id)
     if (!alreadyApproved) {
       const decision = await bot.requestMembershipApproval({
         approverDiscordId: config.approvalAdminDiscordId,
@@ -141,9 +141,9 @@ export function createAuthRouter(
       })
 
       if (decision === 'approved') {
-        profileDb.setGroupMemberById(sessionUser.id, true)
+        await profileDb.setGroupMemberById(sessionUser.id, true)
       } else {
-        profileDb.setGroupMemberById(sessionUser.id, false)
+        await profileDb.setGroupMemberById(sessionUser.id, false)
         res.clearCookie(OAUTH_STATE_COOKIE, { path: '/' })
         res.redirect(`${config.frontendOrigin}/#/members?approval=${decision}`)
         return

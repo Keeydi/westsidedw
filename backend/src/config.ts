@@ -26,6 +26,7 @@ export type AppConfig = {
   port: number
   frontendOrigin: string
   frontendSuccessUrl: string
+  databaseUrl?: string
   sessionSecret: string
   sessionTtlMs: number
   cookieSecure: boolean
@@ -51,6 +52,7 @@ export function loadConfig(): AppConfig {
     port: getNumber('PORT', 4000),
     frontendOrigin,
     frontendSuccessUrl,
+    databaseUrl: process.env.DATABASE_URL,
     sessionSecret: getRequired('SESSION_SECRET'),
     sessionTtlMs: getNumber('SESSION_TTL_MS', 86_400_000),
     cookieSecure: getBoolean('COOKIE_SECURE', false),

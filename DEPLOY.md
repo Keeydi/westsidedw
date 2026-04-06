@@ -12,6 +12,7 @@ This project is split as:
    - Start: `npm --prefix backend run start`
 3. Add backend environment variables in Railway:
    - `PORT` = `4000` (or Railway-provided value)
+   - `DATABASE_URL` = Postgres connection string (recommended, enables persistent profiles)
    - `FRONTEND_ORIGIN` = `https://<your-user>.github.io`
    - `FRONTEND_SUCCESS_URL` = `https://<your-user>.github.io/<repo>/#/members`
    - `SESSION_SECRET` = long random secret
@@ -23,7 +24,7 @@ This project is split as:
    - `DISCORD_BOT_TOKEN`
    - `APPROVAL_ADMIN_DISCORD_ID` = `1295395830865461260`
    - `APPROVAL_REQUEST_TIMEOUT_MS` = `300000`
-   - `PROFILE_DB_PATH` = `data/profiles.json` (optional, default already works)
+   - `PROFILE_DB_PATH` = `data/profiles.json` (optional fallback when `DATABASE_URL` is not set)
 4. Deploy once and copy your Railway public URL, e.g. `https://westside-backend.up.railway.app`.
 
 ## 2) Deploy frontend to GitHub Pages
