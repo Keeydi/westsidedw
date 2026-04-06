@@ -15,9 +15,33 @@ export function setSessionId(sessionId: string | null): void {
   window.localStorage.removeItem(SESSION_STORAGE_KEY)
 }
 
-/** Reads sid from hash route query (e.g. #/members?sid=...), stores it, and removes it from URL. */
+function buildUrlWithHashAndSearch(
+  searchParams: URLSearchParams,
+  hash: string,
+): string {
+  const nextSearch = searchParams.toString()
+  return `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ''}${hash}`
+}
+
+/**
+ * Reads sid from URL and stores it in localStorage.
+ * Supports:
+ * - hash route query: #/members?sid=...
+ * - regular query: ?sid=...
+ * Always removes sid from the URL after consuming it.
+ */
 export function consumeSidFromHashRoute(): string | null {
   if (typeof window === 'undefined') return null
+  const searchParams = new URLSearchParams(window.location.search)
+  const sidFromSearch = searchParams.get('sid')
+  if (sidFromSearch?.trim()) {
+    setSessionId(sidFromSearch)
+    searchParams.delete('sid')
+    const nextUrl = buildUrlWithHashAndSearch(searchParams, window.location.hash)
+    window.history.replaceState(null, '', nextUrl)
+    return sidFromSearch
+  }
+
   const hash = window.location.hash
   if (!hash.startsWith('#')) return null
 
@@ -34,7 +58,7 @@ export function consumeSidFromHashRoute(): string | null {
   setSessionId(sid)
   params.delete('sid')
   const nextHash = params.toString() ? `#${route}?${params.toString()}` : `#${route}`
-  const nextUrl = `${window.location.pathname}${window.location.search}${nextHash}`
+  const nextUrl = buildUrlWithHashAndSearch(searchParams, nextHash)
   window.history.replaceState(null, '', nextUrl)
   return sid
 }

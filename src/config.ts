@@ -8,6 +8,20 @@ const rawBase = envString(import.meta.env.VITE_BACKEND_BASE_URL)
 
 export const backendBaseUrl = rawBase ?? 'http://localhost:4000'
 
-export const discordAuthUrl =
-  envString(import.meta.env.VITE_DISCORD_AUTH_URL) ??
-  `${backendBaseUrl}/auth/discord/login`
+function buildLoginUrl(): string {
+  const fallback = `${backendBaseUrl}/auth/discord/login`
+  const configured = envString(import.meta.env.VITE_DISCORD_AUTH_URL)
+  if (!configured) return fallback
+
+  try {
+    const backend = new URL(backendBaseUrl)
+    const login = new URL(configured)
+    // Keep login and API on the same origin to avoid split-session auth issues.
+    if (backend.origin !== login.origin) return fallback
+    return login.toString()
+  } catch {
+    return fallback
+  }
+}
+
+export const discordAuthUrl = buildLoginUrl()

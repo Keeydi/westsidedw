@@ -22,6 +22,7 @@ app.use(
   cors({
     origin: config.frontendOrigin,
     credentials: true,
+    allowedHeaders: ['Content-Type', 'x-westside-sid'],
   }),
 )
 app.use(express.json())
