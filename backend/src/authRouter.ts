@@ -77,7 +77,9 @@ export function createAuthRouter(
     const state = randomBytes(16).toString('hex')
     res.cookie(OAUTH_STATE_COOKIE, state, {
       httpOnly: true,
-      sameSite: 'lax',
+      // OAuth redirects back from discord.com to Railway (cross-site), so
+      // keep state cookie cross-site capable in secure production envs.
+      sameSite: (config.cookieSecure ? 'none' : 'lax') as 'none' | 'lax',
       secure: config.cookieSecure,
       maxAge: 10 * 60 * 1000,
       path: '/',
