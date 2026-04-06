@@ -4,6 +4,7 @@ import { Container } from 'react-bootstrap'
 import { MemberCardContent } from './MemberCardContent'
 import { memberCardSurfaceStyle } from '../memberCardSurfaceStyle'
 import { socialHref } from '../socialHref'
+import { backendBaseUrl, discordAuthUrl } from '../config'
 
 type MemberUser = {
   id: string
@@ -433,8 +434,8 @@ function MyProfileEditor({
 }
 
 export function Members({ editable = false }: MembersProps) {
-  const backendBase = import.meta.env.VITE_BACKEND_BASE_URL ?? 'http://localhost:4000'
-  const loginUrl = import.meta.env.VITE_DISCORD_AUTH_URL ?? `${backendBase}/auth/discord/login`
+  const backendBase = backendBaseUrl
+  const loginUrl = discordAuthUrl
 
   return (
     <section id="members" className="west-members-section">

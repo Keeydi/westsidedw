@@ -5,6 +5,7 @@ import { Container } from 'react-bootstrap'
 import type { MemberCardProfile } from './MemberCardContent'
 import { ProfileMusicFab } from './ProfileMusicFab'
 import { ProfileShowcaseCard } from './ProfileShowcaseCard'
+import { backendBaseUrl } from '../config'
 
 type PublicProfileResponse = {
   user: {
@@ -28,8 +29,7 @@ type PublicProfileResponse = {
 
 export function MemberProfile() {
   const { username } = useParams<{ username: string }>()
-  const backendBase =
-    import.meta.env.VITE_BACKEND_BASE_URL ?? 'http://localhost:4000'
+  const backendBase = backendBaseUrl
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [data, setData] = useState<PublicProfileResponse | null>(null)

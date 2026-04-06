@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useState } from 'react'
 import { Collapse, Container } from 'react-bootstrap'
 import { Link, NavLink } from 'react-router-dom'
+import { backendBaseUrl, discordAuthUrl } from '../config'
 
 export type ThemeMode = 'dark' | 'light'
 
@@ -52,11 +53,7 @@ function MenuIcon({ className }: { className?: string }) {
 export function HeaderBar({ theme, onToggleTheme }: HeaderBarProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const mobileNavId = useId()
-  const backendBase =
-    import.meta.env.VITE_BACKEND_BASE_URL ?? 'http://localhost:4000'
-  const discordAuthUrl =
-    import.meta.env.VITE_DISCORD_AUTH_URL ??
-    `${backendBase}/auth/discord/login`
+  const backendBase = backendBaseUrl
   const [authUser, setAuthUser] = useState<AuthUser | null>(null)
 
   const closeMenu = useCallback(() => setMenuOpen(false), [])
