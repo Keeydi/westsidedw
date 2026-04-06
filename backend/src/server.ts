@@ -10,7 +10,7 @@ import { createProfileRouter } from './profileRouter.js'
 import { createSessionStore } from './sessionStore.js'
 
 const config = loadConfig()
-const sessions = createSessionStore(config.sessionTtlMs)
+const sessions = createSessionStore(config.sessionTtlMs, config.sessionSecret)
 const bot = startDiscordBot(config.discordBotToken)
 const profileDb = config.databaseUrl
   ? await createPostgresProfileDatabase(config.databaseUrl)
