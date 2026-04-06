@@ -1,8 +1,7 @@
 import { Router } from 'express'
 import type { ApiUserProfile, ProfileDatabase } from './profileDatabase.js'
 import type { SessionStore } from './sessionStore.js'
-
-const SESSION_COOKIE = 'westside_sid'
+import { getSessionFromRequest } from './sessionAuth.js'
 
 export function createProfileRouter(
   sessionStore: SessionStore,
@@ -49,20 +48,14 @@ export function createProfileRouter(
   })
 
   router.get('/me', async (req, res) => {
-    const sessionId = req.cookies?.[SESSION_COOKIE]
-    if (!sessionId) {
+    const resolved = getSessionFromRequest(req, sessionStore)
+    if (!resolved) {
       res.status(401).json({ authenticated: false })
       return
     }
 
-    const session = sessionStore.get(sessionId)
-    if (!session) {
-      res.status(401).json({ authenticated: false })
-      return
-    }
-
-    await profileDb.syncFromSession(session.user)
-    const profile = await profileDb.getApiProfile(session.user.id)
+    await profileDb.syncFromSession(resolved.session.user)
+    const profile = await profileDb.getApiProfile(resolved.session.user.id)
     res.json({
       authenticated: true,
       profile,
@@ -70,21 +63,15 @@ export function createProfileRouter(
   })
 
   router.put('/me', async (req, res) => {
-    const sessionId = req.cookies?.[SESSION_COOKIE]
-    if (!sessionId) {
+    const resolved = getSessionFromRequest(req, sessionStore)
+    if (!resolved) {
       res.status(401).json({ authenticated: false })
       return
     }
 
-    const session = sessionStore.get(sessionId)
-    if (!session) {
-      res.status(401).json({ authenticated: false })
-      return
-    }
-
-    await profileDb.syncFromSession(session.user)
+    await profileDb.syncFromSession(resolved.session.user)
     const payload = req.body as ApiUserProfile
-    const profile = await profileDb.upsertApiProfile(session.user.id, payload)
+    const profile = await profileDb.upsertApiProfile(resolved.session.user.id, payload)
     res.json({
       ok: true,
       profile,

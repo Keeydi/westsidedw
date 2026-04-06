@@ -4,6 +4,7 @@ import type { AppConfig } from './config.js'
 import type { SessionStore, SessionUser } from './sessionStore.js'
 import type { ProfileDatabase } from './profileDatabase.js'
 import type { BotHandle } from './bot.js'
+import { getSessionFromRequest } from './sessionAuth.js'
 
 const SESSION_COOKIE = 'westside_sid'
 const OAUTH_STATE_COOKIE = 'westside_oauth_state'
@@ -35,6 +36,25 @@ function buildSessionUser(user: DiscordUserResponse): SessionUser {
     email: user.email,
     bio: user.bio,
   }
+}
+
+function addSessionToFrontendUrl(url: string, sessionId: string): string {
+  const hashIndex = url.indexOf('#')
+  if (hashIndex >= 0) {
+    const beforeHash = url.slice(0, hashIndex)
+    const hashPart = url.slice(hashIndex + 1)
+    const queryIndex = hashPart.indexOf('?')
+    const route = queryIndex >= 0 ? hashPart.slice(0, queryIndex) : hashPart
+    const query = queryIndex >= 0 ? hashPart.slice(queryIndex + 1) : ''
+    const params = new URLSearchParams(query)
+    params.set('sid', sessionId)
+    const nextQuery = params.toString()
+    return `${beforeHash}#${route}${nextQuery ? `?${nextQuery}` : ''}`
+  }
+
+  const parsed = new URL(url)
+  parsed.searchParams.set('sid', sessionId)
+  return parsed.toString()
 }
 
 export function createAuthRouter(
@@ -158,34 +178,27 @@ export function createAuthRouter(
       maxAge: config.sessionTtlMs,
     })
 
-    res.redirect(config.frontendSuccessUrl)
+    res.redirect(addSessionToFrontendUrl(config.frontendSuccessUrl, sessionId))
   })
 
   router.get('/me', (req, res) => {
-    const sessionId = req.cookies?.[SESSION_COOKIE]
-    if (!sessionId) {
-      res.status(401).json({ authenticated: false })
-      return
-    }
-
-    const session = sessionStore.get(sessionId)
-    if (!session) {
-      res.clearCookie(SESSION_COOKIE, sessionCookieBaseOptions)
+    const resolved = getSessionFromRequest(req, sessionStore)
+    if (!resolved) {
       res.status(401).json({ authenticated: false })
       return
     }
 
     res.json({
       authenticated: true,
-      user: session.user,
-      expiresAt: session.expiresAt,
+      user: resolved.session.user,
+      expiresAt: resolved.session.expiresAt,
     })
   })
 
   router.post('/logout', (req, res) => {
-    const sessionId = req.cookies?.[SESSION_COOKIE]
-    if (sessionId) {
-      sessionStore.destroy(sessionId)
+    const resolved = getSessionFromRequest(req, sessionStore)
+    if (resolved) {
+      sessionStore.destroy(resolved.sessionId)
     }
     res.clearCookie(SESSION_COOKIE, sessionCookieBaseOptions)
     res.status(204).send()

@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useId, useState } from 'react'
 import { Collapse, Container } from 'react-bootstrap'
 import { Link, NavLink } from 'react-router-dom'
+import {
+  buildSessionHeaders,
+  consumeSidFromHashRoute,
+  setSessionId,
+} from '../authSession'
 import { backendBaseUrl, discordAuthUrl } from '../config'
 
 export type ThemeMode = 'dark' | 'light'
@@ -59,14 +64,17 @@ export function HeaderBar({ theme, onToggleTheme }: HeaderBarProps) {
   const closeMenu = useCallback(() => setMenuOpen(false), [])
 
   useEffect(() => {
+    consumeSidFromHashRoute()
     const controller = new AbortController()
     const loadMe = async () => {
       try {
         const response = await fetch(`${backendBase}/auth/me`, {
           credentials: 'include',
+          headers: buildSessionHeaders(),
           signal: controller.signal,
         })
         if (!response.ok) {
+          if (response.status === 401) setSessionId(null)
           setAuthUser(null)
           return
         }

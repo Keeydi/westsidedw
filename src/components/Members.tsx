@@ -2,6 +2,11 @@ import { useCallback, useEffect, useState, type MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Container } from 'react-bootstrap'
 import { MemberCardContent } from './MemberCardContent'
+import {
+  buildSessionHeaders,
+  consumeSidFromHashRoute,
+  setSessionId,
+} from '../authSession'
 import { memberCardSurfaceStyle } from '../memberCardSurfaceStyle'
 import { socialHref } from '../socialHref'
 import { backendBaseUrl, discordAuthUrl } from '../config'
@@ -169,15 +174,18 @@ function MyProfileEditor({
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
 
   useEffect(() => {
+    consumeSidFromHashRoute()
     const controller = new AbortController()
     const loadMe = async () => {
       try {
         const response = await fetch(`${backendBase}/auth/me`, {
           credentials: 'include',
+          headers: buildSessionHeaders(),
           signal: controller.signal,
         })
 
         if (response.status === 401) {
+          setSessionId(null)
           setUser(null)
           setError(null)
           return
@@ -196,6 +204,7 @@ function MyProfileEditor({
 
         const profileResponse = await fetch(`${backendBase}/profile/me`, {
           credentials: 'include',
+          headers: buildSessionHeaders(),
           signal: controller.signal,
         })
         if (profileResponse.ok) {
@@ -247,7 +256,7 @@ function MyProfileEditor({
       const response = await fetch(`${backendBase}/profile/me`, {
         method: 'PUT',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: buildSessionHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(profile),
       })
       if (!response.ok) {
