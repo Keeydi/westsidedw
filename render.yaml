@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: westside-backend
+    env: node
+    autoDeploy: true
+    buildCommand: npm --prefix backend ci && npm --prefix backend run build
+    startCommand: npm --prefix backend run start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: SESSION_TTL_MS
+        value: "86400000"
+      - key: APPROVAL_REQUEST_TIMEOUT_MS
+        value: "300000"
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: FRONTEND_ORIGIN
+        sync: false
+      - key: FRONTEND_SUCCESS_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: DISCORD_CLIENT_ID
+        sync: false
+      - key: DISCORD_CLIENT_SECRET
+        sync: false
+      - key: DISCORD_REDIRECT_URI
+        sync: false
+      - key: DISCORD_BOT_TOKEN
+        sync: false
+      - key: APPROVAL_ADMIN_DISCORD_ID
+        sync: false
+      - key: PROFILE_DB_PATH
+        value: data/profiles.json
