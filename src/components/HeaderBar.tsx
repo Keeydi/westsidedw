@@ -4,6 +4,7 @@ import { Link, NavLink } from 'react-router-dom'
 import {
   buildSessionHeaders,
   consumeSidFromHashRoute,
+  getSessionId,
   setSessionId,
 } from '../authSession'
 import { backendBaseUrl, discordAuthUrl } from '../config'
@@ -64,7 +65,13 @@ export function HeaderBar({ theme, onToggleTheme }: HeaderBarProps) {
   const closeMenu = useCallback(() => setMenuOpen(false), [])
 
   useEffect(() => {
-    consumeSidFromHashRoute()
+    const sidFromUrl = consumeSidFromHashRoute()
+    const sid = sidFromUrl ?? getSessionId()
+    if (!sid) {
+      setAuthUser(null)
+      return
+    }
+
     const controller = new AbortController()
     const loadMe = async () => {
       try {

@@ -5,6 +5,7 @@ import { MemberCardContent } from './MemberCardContent'
 import {
   buildSessionHeaders,
   consumeSidFromHashRoute,
+  getSessionId,
   setSessionId,
 } from '../authSession'
 import { memberCardSurfaceStyle } from '../memberCardSurfaceStyle'
@@ -174,7 +175,15 @@ function MyProfileEditor({
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    consumeSidFromHashRoute()
+    const sidFromUrl = consumeSidFromHashRoute()
+    const sid = sidFromUrl ?? getSessionId()
+    if (!sid) {
+      setLoading(false)
+      setUser(null)
+      setError(null)
+      return
+    }
+
     const controller = new AbortController()
     const loadMe = async () => {
       try {
