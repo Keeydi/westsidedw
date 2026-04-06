@@ -1,19 +1,24 @@
 import { useCallback, type MouseEvent } from 'react'
 import { Col, Container, Row } from 'react-bootstrap'
 
+function fromBase(path: string): string {
+  const cleaned = path.replace(/^\/+/, '')
+  return `${import.meta.env.BASE_URL}${cleaned}`
+}
+
 const ITEMS = [
   {
-    image: '/affiliations/10k.png',
+    image: fromBase('/affiliations/10k.png'),
     alt: '10k',
     text: 'Core partner on builds, drops, and long-running collabs.',
   },
   {
-    image: '/affiliations/10kxWS.png',
+    image: fromBase('/affiliations/10kxWS.png'),
     alt: '10k x westside',
     text: 'Including all revshit-affiliated organizations.',
   },
   {
-    image: '/affiliations/1011k.png',
+    image: fromBase('/affiliations/1011k.png'),
     alt: '1011k',
     text: 'Solid "Francis Leo Marcos" supporters.',
   },
