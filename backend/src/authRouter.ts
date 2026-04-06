@@ -44,6 +44,14 @@ export function createAuthRouter(
   bot: BotHandle,
 ): Router {
   const router = Router()
+  const sessionCookieBaseOptions = {
+    httpOnly: true,
+    // GitHub Pages frontend and Railway backend are cross-site, so the
+    // session cookie must be SameSite=None in secure (HTTPS) environments.
+    sameSite: (config.cookieSecure ? 'none' : 'lax') as 'none' | 'lax',
+    secure: config.cookieSecure,
+    path: '/',
+  }
 
   router.get('/discord/login', (_req, res) => {
     const state = randomBytes(16).toString('hex')
@@ -146,11 +154,8 @@ export function createAuthRouter(
 
     res.clearCookie(OAUTH_STATE_COOKIE, { path: '/' })
     res.cookie(SESSION_COOKIE, sessionId, {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: config.cookieSecure,
+      ...sessionCookieBaseOptions,
       maxAge: config.sessionTtlMs,
-      path: '/',
     })
 
     res.redirect(config.frontendSuccessUrl)
@@ -165,7 +170,7 @@ export function createAuthRouter(
 
     const session = sessionStore.get(sessionId)
     if (!session) {
-      res.clearCookie(SESSION_COOKIE, { path: '/' })
+      res.clearCookie(SESSION_COOKIE, sessionCookieBaseOptions)
       res.status(401).json({ authenticated: false })
       return
     }
@@ -182,7 +187,7 @@ export function createAuthRouter(
     if (sessionId) {
       sessionStore.destroy(sessionId)
     }
-    res.clearCookie(SESSION_COOKIE, { path: '/' })
+    res.clearCookie(SESSION_COOKIE, sessionCookieBaseOptions)
     res.status(204).send()
   })
 
