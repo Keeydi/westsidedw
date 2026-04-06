@@ -1,0 +1,169 @@
+@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,400;0,500;1,500&display=swap');
+
+@font-face {
+  font-family: 'Navex';
+  src:
+    url('https://www.irama.bio/_next/static/media/Navex_Regular-s.p.4126ac6b.ttf')
+      format('truetype'),
+    url('/fonts/navex_regular.woff2') format('woff2'),
+    url('/fonts/navex_regular.woff') format('woff'),
+    url('/fonts/navex_regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --west-font-fallback: system-ui, 'Segoe UI', sans-serif;
+
+  --west-bg: #f2f2f2;
+  --west-fg: #1a1a1a;
+  --west-muted: rgba(26, 26, 26, 0.68);
+  --west-code-fg: #6b7280;
+  --west-title-color: #1a1a1a;
+
+  --west-pill-bg: rgba(255, 255, 255, 0.72);
+  --west-pill-border: rgba(0, 0, 0, 0.1);
+  --west-pill-nav-fg: rgba(26, 26, 26, 0.7);
+  --west-pill-nav-fg-hover: #1a1a1a;
+  --west-pill-nav-hover-bg: rgba(0, 0, 0, 0.05);
+  --west-pill-nav-active-bg: rgba(0, 0, 0, 0.08);
+  --west-pill-divider: rgba(0, 0, 0, 0.1);
+  --west-pill-login-bg: rgba(0, 0, 0, 0.08);
+  --west-pill-login-bg-hover: rgba(0, 0, 0, 0.12);
+  --west-pill-login-border: rgba(0, 0, 0, 0.1);
+  --west-pill-login-border-hover: rgba(0, 0, 0, 0.15);
+  --west-pill-login-fg: #1a1a1a;
+  --west-pill-icon-muted: rgba(26, 26, 26, 0.7);
+
+  --west-aff-bracket: rgba(0, 0, 0, 0.22);
+  --west-aff-heading: #1a1a1a;
+  --west-aff-card-border: rgba(0, 0, 0, 0.1);
+  --west-aff-card-border-hover: rgba(0, 0, 0, 0.2);
+  --west-aff-card-bg: rgba(255, 255, 255, 0.55);
+  --west-aff-card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+  --west-aff-card-shadow-hover: 0 14px 28px -8px rgba(0, 0, 0, 0.18);
+  --west-aff-hover-glow: rgba(0, 0, 0, 0.08);
+  --west-aff-corner-icon: rgba(26, 26, 26, 0.55);
+  --west-aff-corner-icon-hover: rgba(26, 26, 26, 0.95);
+  --west-aff-glyph: rgba(26, 26, 26, 0.55);
+  --west-aff-caption: #1a1a1a;
+
+  --west-mem-card-bg: rgba(255, 255, 255, 0.58);
+  --west-mem-card-bg-hover: rgba(255, 255, 255, 0.72);
+  --west-mem-card-border: rgba(0, 0, 0, 0.12);
+  --west-mem-card-border-hover: rgba(0, 0, 0, 0.24);
+  --west-mem-card-shadow:
+    0 10px 20px -12px rgba(0, 0, 0, 0.22),
+    0 4px 10px -8px rgba(0, 0, 0, 0.2);
+  --west-mem-card-shadow-hover:
+    0 22px 30px -18px rgba(0, 0, 0, 0.3),
+    0 10px 16px -10px rgba(0, 0, 0, 0.25);
+  --west-mem-topline: rgba(0, 0, 0, 0.2);
+  --west-mem-glow: rgba(0, 0, 0, 0.1);
+  --west-mem-avatar-glow: rgba(0, 0, 0, 0.15);
+  --west-mem-name: rgba(26, 26, 26, 0.9);
+  --west-mem-name-hover: #1a1a1a;
+  --west-mem-bio: rgba(26, 26, 26, 0.72);
+  --west-mem-bio-hover: rgba(26, 26, 26, 0.86);
+
+  --west-showcase-bg: color-mix(in srgb, var(--west-bg) 50%, transparent);
+  --west-showcase-border: color-mix(in srgb, var(--west-pill-border) 50%, transparent);
+  --west-showcase-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  --west-showcase-social-bg: color-mix(in srgb, var(--west-pill-login-bg) 50%, transparent);
+  --west-showcase-social-border: color-mix(in srgb, var(--west-pill-border) 30%, transparent);
+  --west-showcase-social-hover-bg: var(--west-pill-login-bg-hover);
+  --west-showcase-accent: rgba(59, 130, 246, 0.55);
+}
+
+[data-west-theme='dark'] {
+  --west-bg: #000000;
+  --west-fg: #ffffff;
+  --west-muted: rgba(244, 244, 245, 0.72);
+  --west-code-fg: #a1a1aa;
+  --west-title-color: transparent;
+
+  --west-pill-bg: rgba(255, 255, 255, 0.04);
+  --west-pill-border: rgba(255, 255, 255, 0.1);
+  --west-pill-nav-fg: rgba(255, 255, 255, 0.7);
+  --west-pill-nav-fg-hover: #ffffff;
+  --west-pill-nav-hover-bg: rgba(255, 255, 255, 0.05);
+  --west-pill-nav-active-bg: rgba(255, 255, 255, 0.08);
+  --west-pill-divider: rgba(255, 255, 255, 0.1);
+  --west-pill-login-bg: rgba(255, 255, 255, 0.08);
+  --west-pill-login-bg-hover: rgba(255, 255, 255, 0.12);
+  --west-pill-login-border: rgba(255, 255, 255, 0.1);
+  --west-pill-login-border-hover: rgba(255, 255, 255, 0.15);
+  --west-pill-login-fg: #ffffff;
+  --west-pill-icon-muted: rgba(255, 255, 255, 0.7);
+
+  --west-aff-bracket: rgba(255, 255, 255, 0.3);
+  --west-aff-heading: #ffffff;
+  --west-aff-card-border: rgba(255, 255, 255, 0.1);
+  --west-aff-card-border-hover: rgba(255, 255, 255, 0.24);
+  --west-aff-card-bg: rgba(255, 255, 255, 0.06);
+  --west-aff-card-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(83, 88, 118, 0.08);
+  --west-aff-card-shadow-hover:
+    0 20px 30px -12px rgba(0, 0, 0, 0.5),
+    0 10px 14px -8px rgba(83, 88, 118, 0.2);
+  --west-aff-hover-glow: rgba(255, 255, 255, 0.12);
+  --west-aff-corner-icon: rgba(255, 255, 255, 0.7);
+  --west-aff-corner-icon-hover: rgba(255, 255, 255, 1);
+  --west-aff-glyph: rgba(255, 255, 255, 0.55);
+  --west-aff-caption: #ffffff;
+
+  --west-mem-card-bg: rgba(255, 255, 255, 0.04);
+  --west-mem-card-bg-hover: rgba(255, 255, 255, 0.08);
+  --west-mem-card-border: rgba(255, 255, 255, 0.1);
+  --west-mem-card-border-hover: rgba(255, 255, 255, 0.18);
+  --west-mem-card-shadow:
+    0 12px 24px -14px rgba(0, 0, 0, 0.55),
+    0 6px 12px -10px rgba(83, 88, 118, 0.25);
+  --west-mem-card-shadow-hover:
+    0 24px 36px -18px rgba(0, 0, 0, 0.66),
+    0 12px 18px -10px rgba(83, 88, 118, 0.38);
+  --west-mem-topline: rgba(255, 255, 255, 0.2);
+  --west-mem-glow: rgba(255, 255, 255, 0.12);
+  --west-mem-avatar-glow: rgba(255, 255, 255, 0.2);
+  --west-mem-name: rgba(255, 255, 255, 0.9);
+  --west-mem-name-hover: #ffffff;
+  --west-mem-bio: rgba(255, 255, 255, 0.76);
+  --west-mem-bio-hover: rgba(255, 255, 255, 0.94);
+
+  --west-showcase-bg: rgba(255, 255, 255, 0.06);
+  --west-showcase-border: color-mix(in srgb, var(--west-pill-border) 50%, transparent);
+  --west-showcase-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.45),
+    0 8px 10px -6px rgba(0, 0, 0, 0.35);
+  --west-showcase-social-bg: rgba(255, 255, 255, 0.06);
+  --west-showcase-social-border: color-mix(in srgb, var(--west-pill-border) 30%, transparent);
+  --west-showcase-social-hover-bg: rgba(255, 255, 255, 0.12);
+  --west-showcase-accent: rgba(96, 165, 250, 0.55);
+}
+
+.font-navex {
+  font-family: 'Navex', var(--west-font-fallback);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  background: var(--west-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100svh;
+}
