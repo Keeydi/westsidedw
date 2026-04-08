@@ -13,12 +13,12 @@ const ITEMS = [
     text: 'Core partner on builds, drops, and long-running collabs.',
   },
   {
-    image: fromBase('/affiliations/10kxWS.png'),
+    image: fromBase('/affiliations/10k.png'),
     alt: '10k x westside',
     text: 'Including all revshit-affiliated organizations.',
   },
   {
-    image: fromBase('/affiliations/1011k.png'),
+    image: fromBase('/affiliations/10k.png'),
     alt: '1011k',
     text: 'Solid "Francis Leo Marcos" supporters.',
   },

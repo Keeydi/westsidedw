@@ -4,7 +4,8 @@ import type {
   ApiUserProfile,
   ProfileDatabase,
   ProfileRecordJson,
-  ProfileSocialsJson,
+  ProfileSocialLinkJson,
+  ProfileSocialsInputJson,
 } from './profileDatabase.js'
 
 type ProfileRow = {
@@ -15,8 +16,9 @@ type ProfileRow = {
   is_group_member: boolean
   bio: string | null
   role: string | null
-  socials: ProfileSocialsJson | null
+  socials: ProfileSocialsInputJson | null
   background_url: string | null
+  banner_url: string | null
   music_url: string | null
 }
 
@@ -26,17 +28,35 @@ function normalizeOptional(value: string | undefined): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined
 }
 
-function normalizeSocials(links: ProfileSocialsJson | undefined): ProfileSocialsJson | undefined {
+function normalizeSocials(
+  links: ProfileSocialsInputJson | undefined,
+): ProfileSocialLinkJson[] | undefined {
   if (!links) return undefined
-  const normalized: ProfileSocialsJson = {
-    discord: normalizeOptional(links.discord),
-    github: normalizeOptional(links.github),
-    twitch: normalizeOptional(links.twitch),
-    tiktok: normalizeOptional(links.tiktok),
-    kick: normalizeOptional(links.kick),
-    youtube: normalizeOptional(links.youtube),
+  if (Array.isArray(links)) {
+    const normalized = links
+      .map((entry) => {
+        const platform = normalizeOptional(entry.platform)?.toLowerCase()
+        const value = normalizeOptional(entry.value)
+        const label = normalizeOptional(entry.label)
+        if (!platform || !value) return undefined
+        return {
+          platform,
+          value,
+          ...(label ? { label } : {}),
+        } satisfies ProfileSocialLinkJson
+      })
+      .filter((entry): entry is ProfileSocialLinkJson => Boolean(entry))
+    return normalized.length > 0 ? normalized : undefined
   }
-  return Object.values(normalized).some(Boolean) ? normalized : undefined
+
+  const normalized: ProfileSocialLinkJson[] = Object.entries(links)
+    .map(([platform, value]) => {
+      const nextValue = normalizeOptional(value)
+      if (!nextValue) return undefined
+      return { platform: platform.toLowerCase(), value: nextValue }
+    })
+    .filter((entry): entry is ProfileSocialLinkJson => Boolean(entry))
+  return normalized.length > 0 ? normalized : undefined
 }
 
 function rowToRecord(row: ProfileRow): ProfileRecordJson {
@@ -49,8 +69,9 @@ function rowToRecord(row: ProfileRow): ProfileRecordJson {
   if (row.is_group_member) record.isGroupMember = true
   if (row.bio) record.bio = row.bio
   if (row.role) record.role = row.role
-  if (row.socials) record.socials = row.socials
+  if (row.socials) record.socials = normalizeSocials(row.socials)
   if (row.background_url) record.backgroundUrl = row.background_url
+  if (row.banner_url) record.bannerUrl = row.banner_url
   if (row.music_url) record.musicUrl = row.music_url
   return record
 }
@@ -60,8 +81,9 @@ function recordToApi(record: ProfileRecordJson): ApiUserProfile {
     bio: record.bio,
     role: record.role,
     backgroundUrl: record.backgroundUrl,
+    bannerUrl: record.bannerUrl,
     musicUrl: record.musicUrl,
-    socialLinks: record.socials,
+    socialLinks: normalizeSocials(record.socials),
   }
 }
 
@@ -84,9 +106,15 @@ export async function createPostgresProfileDatabase(
       role TEXT NULL,
       socials JSONB NULL,
       background_url TEXT NULL,
+      banner_url TEXT NULL,
       music_url TEXT NULL,
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+  `)
+
+  await pool.query(`
+    ALTER TABLE profiles
+    ADD COLUMN IF NOT EXISTS banner_url TEXT NULL;
   `)
 
   await pool.query(`
@@ -189,6 +217,10 @@ export async function createPostgresProfileDatabase(
       current.backgroundUrl = normalizeOptional(patch.backgroundUrl)
       if (!current.backgroundUrl) delete current.backgroundUrl
     }
+    if (patch.bannerUrl !== undefined) {
+      current.bannerUrl = normalizeOptional(patch.bannerUrl)
+      if (!current.bannerUrl) delete current.bannerUrl
+    }
     if (patch.musicUrl !== undefined) {
       current.musicUrl = normalizeOptional(patch.musicUrl)
       if (!current.musicUrl) delete current.musicUrl
@@ -206,7 +238,8 @@ export async function createPostgresProfileDatabase(
         role = $3,
         socials = $4::jsonb,
         background_url = $5,
-        music_url = $6,
+        banner_url = $6,
+        music_url = $7,
         updated_at = NOW()
       WHERE id = $1;
       `,
@@ -216,6 +249,7 @@ export async function createPostgresProfileDatabase(
         current.role ?? null,
         current.socials ? JSON.stringify(current.socials) : null,
         current.backgroundUrl ?? null,
+        current.bannerUrl ?? null,
         current.musicUrl ?? null,
       ],
     )

@@ -5,7 +5,8 @@ import type {
   ApiUserProfile,
   ProfileDatabase,
   ProfileRecordJson,
-  ProfileSocialsJson,
+  ProfileSocialLinkJson,
+  ProfileSocialsInputJson,
 } from './profileDatabase.js'
 
 function normalizeOptional(value: string | undefined): string | undefined {
@@ -14,17 +15,36 @@ function normalizeOptional(value: string | undefined): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined
 }
 
-function normalizeSocials(links: ProfileSocialsJson | undefined): ProfileSocialsJson | undefined {
+function normalizeSocials(
+  links: ProfileSocialsInputJson | undefined,
+): ProfileSocialLinkJson[] | undefined {
   if (!links) return undefined
-  const normalized: ProfileSocialsJson = {
-    discord: normalizeOptional(links.discord),
-    github: normalizeOptional(links.github),
-    twitch: normalizeOptional(links.twitch),
-    tiktok: normalizeOptional(links.tiktok),
-    kick: normalizeOptional(links.kick),
-    youtube: normalizeOptional(links.youtube),
+
+  if (Array.isArray(links)) {
+    const normalized = links
+      .map((entry) => {
+        const platform = normalizeOptional(entry.platform)?.toLowerCase()
+        const value = normalizeOptional(entry.value)
+        const label = normalizeOptional(entry.label)
+        if (!platform || !value) return undefined
+        return {
+          platform,
+          value,
+          ...(label ? { label } : {}),
+        } satisfies ProfileSocialLinkJson
+      })
+      .filter((entry): entry is ProfileSocialLinkJson => Boolean(entry))
+    return normalized.length > 0 ? normalized : undefined
   }
-  return Object.values(normalized).some(Boolean) ? normalized : undefined
+
+  const normalized: ProfileSocialLinkJson[] = Object.entries(links)
+    .map(([platform, value]) => {
+      const nextValue = normalizeOptional(value)
+      if (!nextValue) return undefined
+      return { platform: platform.toLowerCase(), value: nextValue }
+    })
+    .filter((entry): entry is ProfileSocialLinkJson => Boolean(entry))
+  return normalized.length > 0 ? normalized : undefined
 }
 
 function recordToApi(record: ProfileRecordJson): ApiUserProfile {
@@ -32,8 +52,9 @@ function recordToApi(record: ProfileRecordJson): ApiUserProfile {
     bio: record.bio,
     role: record.role,
     backgroundUrl: record.backgroundUrl,
+    bannerUrl: record.bannerUrl,
     musicUrl: record.musicUrl,
-    socialLinks: record.socials,
+    socialLinks: normalizeSocials(record.socials),
   }
 }
 
@@ -52,6 +73,11 @@ function applyPatch(record: ProfileRecordJson, patch: ApiUserProfile): void {
     const v = normalizeOptional(patch.backgroundUrl)
     if (v) record.backgroundUrl = v
     else delete record.backgroundUrl
+  }
+  if (patch.bannerUrl !== undefined) {
+    const v = normalizeOptional(patch.bannerUrl)
+    if (v) record.bannerUrl = v
+    else delete record.bannerUrl
   }
   if (patch.musicUrl !== undefined) {
     const v = normalizeOptional(patch.musicUrl)

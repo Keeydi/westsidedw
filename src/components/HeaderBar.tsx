@@ -7,14 +7,7 @@ import {
   getSessionId,
   setSessionId,
 } from '../authSession'
-import { backendBaseUrl, discordAuthUrl } from '../config'
-
-export type ThemeMode = 'dark' | 'light'
-
-type HeaderBarProps = {
-  theme: ThemeMode
-  onToggleTheme: () => void
-}
+import { backendBaseUrl, backendEnabled, discordAuthUrl } from '../config'
 
 type AuthUser = {
   id: string
@@ -31,23 +24,6 @@ function DiscordIcon({ className }: { className?: string }) {
   )
 }
 
-function SunIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-    </svg>
-  )
-}
-
-function MoonIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-    </svg>
-  )
-}
-
 function MenuIcon({ className }: { className?: string }) {
   return (
     <svg className={className} width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -56,7 +32,7 @@ function MenuIcon({ className }: { className?: string }) {
   )
 }
 
-export function HeaderBar({ theme, onToggleTheme }: HeaderBarProps) {
+export function HeaderBar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const mobileNavId = useId()
   const backendBase = backendBaseUrl
@@ -65,6 +41,11 @@ export function HeaderBar({ theme, onToggleTheme }: HeaderBarProps) {
   const closeMenu = useCallback(() => setMenuOpen(false), [])
 
   useEffect(() => {
+    if (!backendEnabled) {
+      setAuthUser(null)
+      return
+    }
+
     const sidFromUrl = consumeSidFromHashRoute()
     const sid = sidFromUrl ?? getSessionId()
     if (!sid) {
@@ -112,17 +93,17 @@ export function HeaderBar({ theme, onToggleTheme }: HeaderBarProps) {
       .join(' ')
 
   return (
-    <header className="west-header" data-bs-theme={theme}>
+    <header className="west-header">
       <Container fluid className="west-header-page-gutter px-3 px-sm-4 pt-3">
         <div className="west-header-pill">
           <div className="d-flex align-items-center justify-content-between px-3 px-sm-4 west-header-inner-row">
             <Link
               className="west-pill-logo font-navex text-uppercase text-decoration-none"
-              aria-label="westside Home"
+              aria-label="DYISKUMPADRES Home"
               to="/"
               onClick={closeMenu}
             >
-              westside
+              DYISKUMPADRES
             </Link>
 
             <div className="d-none d-md-flex align-items-center gap-1">
@@ -160,26 +141,9 @@ export function HeaderBar({ theme, onToggleTheme }: HeaderBarProps) {
                   <span>Login</span>
                 </a>
               )}
-              <div className="west-header-divider mx-2" aria-hidden="true" />
-              <button
-                type="button"
-                className="west-pill-icon-btn"
-                onClick={onToggleTheme}
-                aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              >
-                {theme === 'dark' ? <SunIcon className="west-pill-icon-btn__svg" /> : <MoonIcon className="west-pill-icon-btn__svg" />}
-              </button>
             </div>
 
             <div className="d-flex d-md-none align-items-center gap-2">
-              <button
-                type="button"
-                className="west-pill-icon-btn"
-                onClick={onToggleTheme}
-                aria-label="Toggle theme"
-              >
-                {theme === 'dark' ? <SunIcon className="west-pill-icon-btn__svg" /> : <MoonIcon className="west-pill-icon-btn__svg" />}
-              </button>
               <button
                 type="button"
                 className="west-pill-icon-btn"

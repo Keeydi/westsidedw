@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto'
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { Router } from 'express'
 import type { AppConfig } from './config.js'
 import type { SessionStore, SessionUser } from './sessionStore.js'
@@ -6,8 +6,7 @@ import type { ProfileDatabase } from './profileDatabase.js'
 import type { BotHandle } from './bot.js'
 import { getSessionFromRequest } from './sessionAuth.js'
 
-const SESSION_COOKIE = 'westside_sid'
-const OAUTH_STATE_COOKIE = 'westside_oauth_state'
+const OAUTH_STATE_TTL_MS = 10 * 60 * 1000
 
 type DiscordTokenResponse = {
   access_token: string
@@ -20,6 +19,10 @@ type DiscordUserResponse = {
   avatar: string | null
   email?: string
   bio?: string
+}
+
+type DiscordGuildResponse = {
+  id: string
 }
 
 function toAvatarUrl(user: DiscordUserResponse): string | null {
@@ -57,6 +60,56 @@ function addSessionToFrontendUrl(url: string, sessionId: string): string {
   return parsed.toString()
 }
 
+function toBase64Url(input: string): string {
+  return Buffer.from(input, 'utf8').toString('base64url')
+}
+
+function fromBase64Url(input: string): string {
+  return Buffer.from(input, 'base64url').toString('utf8')
+}
+
+function signState(payloadBase64: string, secret: string): string {
+  return createHmac('sha256', secret).update(payloadBase64).digest('base64url')
+}
+
+function safeEq(a: string, b: string): boolean {
+  const aBuf = Buffer.from(a)
+  const bBuf = Buffer.from(b)
+  if (aBuf.length !== bBuf.length) return false
+  return timingSafeEqual(aBuf, bBuf)
+}
+
+function createSignedOAuthState(secret: string): string {
+  const payload = {
+    iat: Date.now(),
+    r: randomBytes(12).toString('hex'),
+  }
+  const payloadBase64 = toBase64Url(JSON.stringify(payload))
+  return `${payloadBase64}.${signState(payloadBase64, secret)}`
+}
+
+function verifySignedOAuthState(
+  state: string,
+  secret: string,
+  ttlMs: number,
+): boolean {
+  const [payloadBase64, signature] = state.split('.')
+  if (!payloadBase64 || !signature) return false
+
+  const expected = signState(payloadBase64, secret)
+  if (!safeEq(signature, expected)) return false
+
+  try {
+    const parsed = JSON.parse(fromBase64Url(payloadBase64)) as { iat?: number }
+    if (typeof parsed.iat !== 'number' || !Number.isFinite(parsed.iat)) {
+      return false
+    }
+    return Date.now() - parsed.iat <= ttlMs
+  } catch {
+    return false
+  }
+}
+
 export function createAuthRouter(
   config: AppConfig,
   sessionStore: SessionStore,
@@ -64,32 +117,15 @@ export function createAuthRouter(
   bot: BotHandle,
 ): Router {
   const router = Router()
-  const sessionCookieBaseOptions = {
-    httpOnly: true,
-    // GitHub Pages frontend and Railway backend are cross-site, so the
-    // session cookie must be SameSite=None in secure (HTTPS) environments.
-    sameSite: (config.cookieSecure ? 'none' : 'lax') as 'none' | 'lax',
-    secure: config.cookieSecure,
-    path: '/',
-  }
 
   router.get('/discord/login', (_req, res) => {
-    const state = randomBytes(16).toString('hex')
-    res.cookie(OAUTH_STATE_COOKIE, state, {
-      httpOnly: true,
-      // OAuth redirects back from discord.com to Railway (cross-site), so
-      // keep state cookie cross-site capable in secure production envs.
-      sameSite: (config.cookieSecure ? 'none' : 'lax') as 'none' | 'lax',
-      secure: config.cookieSecure,
-      maxAge: 10 * 60 * 1000,
-      path: '/',
-    })
+    const state = createSignedOAuthState(config.sessionSecret)
 
     const params = new URLSearchParams({
       client_id: config.discordClientId,
       redirect_uri: config.discordRedirectUri,
       response_type: 'code',
-      scope: 'identify email',
+      scope: 'identify email guilds',
       prompt: 'consent',
       state,
     })
@@ -99,13 +135,11 @@ export function createAuthRouter(
 
   router.get('/discord/callback', async (req, res) => {
     const { code, state } = req.query
-    const stateCookie = req.cookies?.[OAUTH_STATE_COOKIE]
 
     if (
       typeof code !== 'string' ||
       typeof state !== 'string' ||
-      !stateCookie ||
-      stateCookie !== state
+      !verifySignedOAuthState(state, config.sessionSecret, OAUTH_STATE_TTL_MS)
     ) {
       res.status(400).json({ error: 'Invalid OAuth callback payload.' })
       return
@@ -133,6 +167,29 @@ export function createAuthRouter(
     }
 
     const tokenJson = (await tokenResponse.json()) as DiscordTokenResponse
+    const guildResponse = await fetch('https://discord.com/api/users/@me/guilds', {
+      headers: {
+        Authorization: `Bearer ${tokenJson.access_token}`,
+      },
+    })
+
+    if (!guildResponse.ok) {
+      const body = await guildResponse.text()
+      console.error('Discord guild membership fetch failed:', body)
+      res.status(502).json({ error: 'Failed to verify Discord server membership.' })
+      return
+    }
+
+    const guilds = (await guildResponse.json()) as DiscordGuildResponse[]
+    const requiredGuildId = config.discordGuildId?.trim()
+    const isInRequiredGuild = requiredGuildId
+      ? guilds.some((guild) => guild.id === requiredGuildId)
+      : true
+    if (!isInRequiredGuild) {
+      res.redirect(`${config.frontendOrigin}/#/members?approval=not_in_server`)
+      return
+    }
+
     const userResponse = await fetch('https://discord.com/api/users/@me', {
       headers: {
         Authorization: `Bearer ${tokenJson.access_token}`,
@@ -149,37 +206,41 @@ export function createAuthRouter(
     const userJson = (await userResponse.json()) as DiscordUserResponse
     const sessionUser = buildSessionUser(userJson)
     await profileDb.syncFromSession(sessionUser)
+    const currentProfile = await profileDb.getApiProfile(sessionUser.id)
 
     const alreadyApproved = await profileDb.isGroupMemberById(sessionUser.id)
     if (!alreadyApproved) {
-      const decision = await bot.requestMembershipApproval({
+      const approval = await bot.requestMembershipApproval({
         approverDiscordId: config.approvalAdminDiscordId,
         user: {
           id: sessionUser.id,
           username: sessionUser.username,
           displayName: sessionUser.displayName,
+          avatarUrl: sessionUser.avatarUrl,
+          email: sessionUser.email,
+          bio: sessionUser.bio,
+          requestedRole: currentProfile.role,
         },
         timeoutMs: config.approvalRequestTimeoutMs,
       })
 
-      if (decision === 'approved') {
+      if (approval.decision === 'approved') {
+        await profileDb.setGroupMemberById(sessionUser.id, true)
+        if (approval.assignedRole) {
+          await profileDb.upsertApiProfile(sessionUser.id, { role: approval.assignedRole })
+        }
+      } else if (approval.decision === 'unavailable' && config.approvalAllowOnUnavailable) {
+        // Serverless environments may not keep a persistent Discord bot socket.
+        // Allowing this path keeps login functional when bot approval is disabled.
         await profileDb.setGroupMemberById(sessionUser.id, true)
       } else {
         await profileDb.setGroupMemberById(sessionUser.id, false)
-        res.clearCookie(OAUTH_STATE_COOKIE, { path: '/' })
-        res.redirect(`${config.frontendOrigin}/#/members?approval=${decision}`)
+        res.redirect(`${config.frontendOrigin}/#/members?approval=${approval.decision}`)
         return
       }
     }
 
     const sessionId = sessionStore.create(sessionUser)
-
-    res.clearCookie(OAUTH_STATE_COOKIE, { path: '/' })
-    res.cookie(SESSION_COOKIE, sessionId, {
-      ...sessionCookieBaseOptions,
-      maxAge: config.sessionTtlMs,
-    })
-
     res.redirect(addSessionToFrontendUrl(config.frontendSuccessUrl, sessionId))
   })
 
@@ -202,7 +263,6 @@ export function createAuthRouter(
     if (resolved) {
       sessionStore.destroy(resolved.sessionId)
     }
-    res.clearCookie(SESSION_COOKIE, sessionCookieBaseOptions)
     res.status(204).send()
   })
 

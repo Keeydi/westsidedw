@@ -1,7 +1,7 @@
 import type { SessionUser } from './sessionStore.js'
 
-/** Social links as stored in profiles persistence (`socials`) */
-export type ProfileSocialsJson = {
+/** Legacy social links map (older fixed-key format). */
+export type LegacyProfileSocialsJson = {
   discord?: string
   github?: string
   twitch?: string
@@ -9,6 +9,16 @@ export type ProfileSocialsJson = {
   kick?: string
   youtube?: string
 }
+
+/** Flexible social link row (new format). */
+export type ProfileSocialLinkJson = {
+  platform: string
+  value: string
+  label?: string
+}
+
+/** Social links accepted by API/storage (legacy map or new rows). */
+export type ProfileSocialsInputJson = LegacyProfileSocialsJson | ProfileSocialLinkJson[]
 
 /**
  * One profile row in storage.
@@ -23,8 +33,9 @@ export type ProfileRecordJson = {
   isGroupMember?: boolean
   bio?: string
   role?: string
-  socials?: ProfileSocialsJson
+  socials?: ProfileSocialsInputJson
   backgroundUrl?: string
+  bannerUrl?: string
   musicUrl?: string
 }
 
@@ -33,8 +44,9 @@ export type ApiUserProfile = {
   bio?: string
   role?: string
   backgroundUrl?: string
+  bannerUrl?: string
   musicUrl?: string
-  socialLinks?: ProfileSocialsJson
+  socialLinks?: ProfileSocialsInputJson
 }
 
 export type ProfileDatabase = {

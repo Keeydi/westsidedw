@@ -108,7 +108,7 @@ export function createSessionStore(ttlMs: number, secret: string): SessionStore 
 
   const destroy = (sessionId: string) => {
     // Stateless token sessions cannot be server-revoked without a denylist.
-    // Logout still clears cookie/client token and expires naturally by TTL.
+    // Logout clears the client-held token and expires naturally by TTL.
     void sessionId
   }
 

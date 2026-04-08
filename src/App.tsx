@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import './App.css'
-import { HeaderBar, type ThemeMode } from './components/HeaderBar'
-import { Affiliations } from './components/Affiliations'
+import { HeaderBar } from './components/HeaderBar'
 import { Hero } from './components/Hero'
+import { HomeMusicPlayer } from './components/HomeMusicPlayer'
+import { LandingGate } from './components/LandingGate'
+import { MediaArchivePage } from './components/MediaArchivePage'
 import { Members } from './components/Members'
 import { MemberProfile } from './components/MemberProfile'
+
+type ThemeMode = 'dark' | 'light'
 
 function getInitialTheme(): ThemeMode {
   if (typeof window === 'undefined') return 'light'
@@ -17,7 +21,8 @@ function getInitialTheme(): ThemeMode {
 const MEMBER_PUBLIC_PROFILE_PATH = /^\/members\/u\/[^/]+$/
 
 function App() {
-  const [theme, setTheme] = useState<ThemeMode>(getInitialTheme)
+  const [theme] = useState<ThemeMode>(getInitialTheme)
+  const [hasEntered, setHasEntered] = useState<boolean>(false)
   const location = useLocation()
   const hideHeader = MEMBER_PUBLIC_PROFILE_PATH.test(location.pathname)
 
@@ -27,20 +32,34 @@ function App() {
     window.localStorage.setItem('westside-theme', theme)
   }, [theme])
 
-  const toggleTheme = useCallback(() => {
-    setTheme((t) => (t === 'dark' ? 'light' : 'dark'))
+  useEffect(() => {
+    const handleBackNavigation = () => {
+      setHasEntered(false)
+    }
+    window.addEventListener('popstate', handleBackNavigation)
+    return () => {
+      window.removeEventListener('popstate', handleBackNavigation)
+    }
   }, [])
+
+  const enterSite = useCallback(() => {
+    setHasEntered(true)
+  }, [])
+
+  if (!hasEntered) {
+    return <LandingGate onEnter={enterSite} />
+  }
 
   return (
     <div className={`west-app west-theme-${theme}`}>
-      {!hideHeader ? <HeaderBar theme={theme} onToggleTheme={toggleTheme} /> : null}
+      {!hideHeader ? <HeaderBar /> : null}
       <Routes>
         <Route
           path="/"
           element={
             <>
               <Hero />
-              <Affiliations />
+              <HomeMusicPlayer />
             </>
           }
         />
@@ -50,10 +69,10 @@ function App() {
         <Route
           path="/media"
           element={
-            <section className="west-archive-page d-flex flex-column align-items-center justify-content-center text-center px-3">
-              <h1 className="west-archive-title mb-3">Media</h1>
-              <p className="west-archive-subtext mb-0">Media page is under construction.</p>
-            </section>
+            <>
+              <MediaArchivePage />
+              <HomeMusicPlayer />
+            </>
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />

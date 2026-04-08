@@ -5,10 +5,13 @@ function envString(v: string | undefined): string | undefined {
 }
 
 const rawBase = envString(import.meta.env.VITE_BACKEND_BASE_URL)
+const normalizedBackendBase = rawBase ? rawBase.replace(/\/+$/, '') : ''
+export const backendEnabled = normalizedBackendBase.length > 0
 
-export const backendBaseUrl = rawBase ?? 'http://localhost:4000'
+export const backendBaseUrl = normalizedBackendBase
 
 function buildLoginUrl(): string {
+  if (!backendEnabled) return '#'
   const fallback = `${backendBaseUrl}/auth/discord/login`
   const configured = envString(import.meta.env.VITE_DISCORD_AUTH_URL)
   if (!configured) return fallback
