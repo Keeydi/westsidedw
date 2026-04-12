@@ -3,7 +3,8 @@ services:
     name: westside-backend
     runtime: node
     rootDir: backend
-    plan: starter
+    # Use `starter` or higher if you need always-on / more CPU; `free` spins down when idle.
+    plan: free
     autoDeploy: true
     buildCommand: npm ci && npm run build
     startCommand: npm run start
@@ -13,8 +14,7 @@ services:
         value: 20
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 4000
+      # Do not set PORT here. Render injects PORT; the app must listen on process.env.PORT.
       - key: PROFILE_DB_MODE
         value: postgres
       - key: FRONTEND_ORIGIN
