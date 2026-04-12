@@ -1,73 +1,80 @@
-# React + TypeScript + Vite
+# Westside Deployment Guide
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This repo has:
+- Frontend: React + Vite (root project)
+- Backend: Express + Discord bot (`backend`)
 
-Currently, two official plugins are available:
+The frontend is configured for Netlify, and the backend is configured for Render (always-on process).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Local development
 
-## React Compiler
+Frontend:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Backend:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cd backend
+npm install
+npm run dev
 ```
+
+## Deploy frontend to Netlify
+
+The repository already includes:
+- `netlify.toml`
+- `public/_redirects` (SPA fallback)
+
+In Netlify, set:
+- Build command: `npm run build`
+- Publish directory: `dist`
+- Base directory: repo root
+
+Set environment variables in Netlify:
+- `VITE_BACKEND_BASE_URL=https://<your-backend-domain>`
+- `VITE_DISCORD_AUTH_URL=https://<your-backend-domain>/auth/discord/login`
+
+## Deploy backend to Render
+
+The repository already includes `render.yaml`, which creates:
+- A web service named `westside-backend`
+- A Postgres database named `westside-db`
+
+Steps:
+1. Push this repo to GitHub.
+2. In Render, create a Blueprint from this repo.
+3. Fill in all required env vars marked `sync: false` in `render.yaml`.
+4. Confirm the service URL (for example, `https://westside-backend.onrender.com`).
+
+Use `backend/.env.example` as a template for required backend variables.
+
+## Required backend variables
+
+At minimum, set:
+- `FRONTEND_ORIGIN` to your Netlify URL
+- `FRONTEND_SUCCESS_URL` to `https://<netlify-url>/#/members`
+- `SESSION_SECRET` (strong random value)
+- `DISCORD_CLIENT_ID`
+- `DISCORD_CLIENT_SECRET`
+- `DISCORD_REDIRECT_URI` to `https://<backend-url>/auth/discord/callback`
+- `DISCORD_BOT_TOKEN`
+- `DISCORD_GUILD_ID`
+- `APPROVAL_ADMIN_DISCORD_ID`
+- `DATABASE_URL` (auto-wired by Blueprint from Render Postgres)
+
+## Discord OAuth callback update
+
+In the Discord developer portal for your app, add the production callback URL:
+
+`https://<backend-url>/auth/discord/callback`
+
+## Verify after deploy
+
+1. Open backend health endpoint:
+   - `https://<backend-url>/health`
+2. Open Netlify frontend and verify member/auth flows.
+3. Ensure CORS is correct (`FRONTEND_ORIGIN` matches frontend domain).

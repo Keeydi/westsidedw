@@ -16,7 +16,7 @@ Optional:
 ## 2) Discord OAuth setup
 
 In Discord Developer Portal:
-- Add redirect URL: `http://localhost:4000/auth/discord/callback`
+- Add redirect URL: `https://backend.example.com/auth/discord/callback`
 - OAuth scopes used: `identify email`
 
 ## 3) Run backend
@@ -30,7 +30,7 @@ npm --prefix backend run dev
 In root `.env`, set:
 
 ```bash
-VITE_DISCORD_AUTH_URL=http://localhost:4000/auth/discord/login
+VITE_DISCORD_AUTH_URL=https://backend.example.com/auth/discord/login
 ```
 
 Run frontend:
