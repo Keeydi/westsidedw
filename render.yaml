@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: westside-backend
+    name: dyiskumpadres-backend
     runtime: node
     rootDir: backend
     # Use `starter` or higher if you need always-on / more CPU; `free` spins down when idle.
@@ -45,9 +45,9 @@ services:
         value: "false"
       - key: DATABASE_URL
         fromDatabase:
-          name: westside-db
+          name: dyiskumpadres-db
           property: connectionString
 
 databases:
-  - name: westside-db
+  - name: dyiskumpadres-db
     plan: free

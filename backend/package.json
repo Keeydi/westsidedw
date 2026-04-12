@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "Westside Discord auth and bot backend",
+  "description": "Dyiskumpadres Discord auth and bot backend",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",

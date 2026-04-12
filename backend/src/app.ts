@@ -83,7 +83,7 @@ export async function createApp(config: AppConfig) {
 
         callback(null, false)
       },
-      allowedHeaders: ['Content-Type', 'x-westside-sid'],
+      allowedHeaders: ['Content-Type', 'x-dyiskumpadres-sid'],
       methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
       credentials: true,
       optionsSuccessStatus: 204,

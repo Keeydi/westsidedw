@@ -1,8 +1,17 @@
-const SESSION_STORAGE_KEY = 'westside_session_id'
+const SESSION_STORAGE_KEY = 'dyiskumpadres_session_id'
+const LEGACY_SESSION_STORAGE_KEY = 'westside_session_id'
 
 export function getSessionId(): string | null {
   if (typeof window === 'undefined') return null
-  const sid = window.localStorage.getItem(SESSION_STORAGE_KEY)
+  let sid = window.localStorage.getItem(SESSION_STORAGE_KEY)
+  if (!sid?.trim()) {
+    const legacy = window.localStorage.getItem(LEGACY_SESSION_STORAGE_KEY)
+    if (legacy?.trim()) {
+      window.localStorage.setItem(SESSION_STORAGE_KEY, legacy.trim())
+      window.localStorage.removeItem(LEGACY_SESSION_STORAGE_KEY)
+      sid = legacy
+    }
+  }
   return sid?.trim() ? sid : null
 }
 
@@ -70,25 +79,25 @@ export function buildSessionHeaders(
   if (!sid) return existing
 
   if (!existing) {
-    return { 'x-westside-sid': sid }
+    return { 'x-dyiskumpadres-sid': sid }
   }
 
   if (existing instanceof Headers) {
     const next = new Headers(existing)
-    next.set('x-westside-sid', sid)
+    next.set('x-dyiskumpadres-sid', sid)
     return next
   }
 
   if (Array.isArray(existing)) {
     const next = [...existing]
-    const idx = next.findIndex(([k]) => k.toLowerCase() === 'x-westside-sid')
-    if (idx >= 0) next[idx] = ['x-westside-sid', sid]
-    else next.push(['x-westside-sid', sid])
+    const idx = next.findIndex(([k]) => k.toLowerCase() === 'x-dyiskumpadres-sid')
+    if (idx >= 0) next[idx] = ['x-dyiskumpadres-sid', sid]
+    else next.push(['x-dyiskumpadres-sid', sid])
     return next
   }
 
   return {
     ...existing,
-    'x-westside-sid': sid,
+    'x-dyiskumpadres-sid': sid,
   }
 }

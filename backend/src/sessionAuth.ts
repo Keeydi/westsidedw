@@ -1,7 +1,7 @@
 import type { Request } from 'express'
 import type { SessionStore } from './sessionStore.js'
 
-const SESSION_HEADER = 'x-westside-sid'
+const SESSION_HEADER = 'x-dyiskumpadres-sid'
 
 export function getSessionIdFromRequest(req: Request): string | undefined {
   const headerSid = req.header(SESSION_HEADER)

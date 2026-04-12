@@ -231,9 +231,9 @@ export function MemberProfile() {
 
   useEffect(() => {
     if (data?.user.displayName) {
-      document.title = `${data.user.displayName} | WESTSIDE`
+      document.title = `${data.user.displayName} | DYISKUMPADRES`
       return () => {
-        document.title = 'WESTSIDE'
+        document.title = 'DYISKUMPADRES'
       }
     }
   }, [data?.user.displayName])
@@ -677,7 +677,7 @@ export function MemberProfile() {
       {!entered ? (
         <div id="overlay" onClick={() => setEntered(true)}>
           <div className="ov-eyebrow">tap to enter</div>
-          <div className="ov-title">WESTSIDE</div>
+          <div className="ov-title">DYISKUMPADRES</div>
           <div className="ov-sub">members profile</div>
         </div>
       ) : null}

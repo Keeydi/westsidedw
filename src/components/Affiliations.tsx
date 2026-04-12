@@ -14,7 +14,7 @@ const ITEMS = [
   },
   {
     image: fromBase('/affiliations/10k.png'),
-    alt: '10k x westside',
+    alt: '10k x Dyiskumpadres',
     text: 'Including all revshit-affiliated organizations.',
   },
   {

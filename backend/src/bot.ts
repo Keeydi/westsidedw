@@ -213,7 +213,7 @@ function buildRequestEmbed(user: ApprovalUser): EmbedBuilder {
   const embed = new EmbedBuilder()
     .setColor(0x5865f2)
     .setTitle('New Membership Approval Request')
-    .setDescription('A user requested access to the Westside members area.')
+    .setDescription('A user requested access to the Dyiskumpadres members area.')
     .addFields(
       {
         name: 'Discord Name',

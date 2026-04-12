@@ -5,7 +5,7 @@ const config = loadConfig()
 const app = await createApp(config)
 
 app.listen(config.port, () => {
-  console.log(`Westside backend listening on port ${config.port}`)
+  console.log(`Dyiskumpadres backend listening on port ${config.port}`)
   console.log(`Allowed frontend origins: ${config.frontendOrigins.join(', ')}`)
   if (config.profileDbMode === 'memory') {
     console.log('Profiles database: Memory (non-persistent)')

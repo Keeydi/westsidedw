@@ -1,4 +1,4 @@
-# Westside Backend (Discord Auth + Bot)
+# Dyiskumpadres Backend (Discord Auth + Bot)
 
 ## 1) Configure environment
 

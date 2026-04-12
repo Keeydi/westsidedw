@@ -565,7 +565,7 @@ function MyProfileEditor({
       </div>
       <h2 className="west-profile-editor__title">Customize My Profile</h2>
       <p className="west-profile-editor__subtitle">
-        Keep your public card synced with the same WESTSIDE visual style.
+        Keep your public card synced with the same DYISKUMPADRES visual style.
       </p>
       <div className="west-profile-editor__section">
         <div className="west-profile-editor__section-title">Core Profile</div>

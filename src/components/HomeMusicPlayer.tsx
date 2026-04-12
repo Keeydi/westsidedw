@@ -125,7 +125,7 @@ export function HomeMusicPlayer() {
 
   return (
     <>
-      <audio ref={audioRef} preload="metadata" src={fromBase('/music/westside-ost-original.wav')} />
+      <audio ref={audioRef} preload="metadata" src={fromBase('/music/dyiskumpadres-ost-original.wav')} />
       <aside className="west-home-player" aria-label="Homepage music player">
         <div className="west-home-player__head">
           <img
@@ -136,8 +136,8 @@ export function HomeMusicPlayer() {
             decoding="async"
           />
           <div className="west-home-player__meta">
-            <div className="west-home-player__title">Westside OST</div>
-            <div className="west-home-player__artist">Westside Exclusive</div>
+            <div className="west-home-player__title">Dyiskumpadres OST</div>
+            <div className="west-home-player__artist">Dyiskumpadres Exclusive</div>
           </div>
           <div className="west-home-player__badge">LIVE</div>
         </div>

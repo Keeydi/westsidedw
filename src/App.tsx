@@ -13,7 +13,15 @@ type ThemeMode = 'dark' | 'light'
 
 function getInitialTheme(): ThemeMode {
   if (typeof window === 'undefined') return 'light'
-  const stored = window.localStorage.getItem('westside-theme') as ThemeMode | null
+  let stored = window.localStorage.getItem('dyiskumpadres-theme') as ThemeMode | null
+  if (!stored) {
+    const legacyTheme = window.localStorage.getItem('westside-theme') as ThemeMode | null
+    if (legacyTheme === 'light' || legacyTheme === 'dark') {
+      window.localStorage.setItem('dyiskumpadres-theme', legacyTheme)
+      window.localStorage.removeItem('westside-theme')
+      stored = legacyTheme
+    }
+  }
   if (stored === 'light' || stored === 'dark') return stored
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
@@ -29,7 +37,7 @@ function App() {
   useEffect(() => {
     document.documentElement.setAttribute('data-west-theme', theme)
     document.documentElement.setAttribute('data-bs-theme', theme)
-    window.localStorage.setItem('westside-theme', theme)
+    window.localStorage.setItem('dyiskumpadres-theme', theme)
   }, [theme])
 
   useEffect(() => {
